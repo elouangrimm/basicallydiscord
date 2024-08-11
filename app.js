@@ -13,9 +13,32 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-const chatBox = document.getElementById('chat-box');
-const usernameInput = document.getElementById('username');
-const messageInput = document.getElementById('message');
+// Wait for the DOM to load before accessing elements
+document.addEventListener('DOMContentLoaded', () => {
+    const usernameInput = document.getElementById('username');
+    const messageInput = document.getElementById('message');
+    const chatBox = document.getElementById('chat-box');
+
+    function sendMessage() {
+        const username = usernameInput.value || 'Anonymous';
+        const messageText = messageInput.value;
+
+        if (messageText.trim()) {
+            db.ref('messages').push({
+                username: username,
+                text: messageText
+            }).then(() => {
+                messageInput.value = ''; // Clear the message input after sending
+            }).catch(error => {
+                console.error("Error sending message: ", error);
+            });
+        }
+    }
+
+    // Set the click handler for the send button
+    document.querySelector('button').addEventListener('click', sendMessage);
+});
+
 
 // Load messages from Firebase
 db.ref('messages').on('child_added', (snapshot) => {
