@@ -1,64 +1,48 @@
-// Your Firebase configuration
+// Initialize Firebase (make sure the configuration matches your project settings)
 const firebaseConfig = {
-  apiKey: "AIzaSyCxGNOFCTk9I-0PYMRuVrVjTwqtQl51GPw",
-  authDomain: "basicallydiscordapp.firebaseapp.com",
-  projectId: "basicallydiscordapp",
-  storageBucket: "basicallydiscordapp.appspot.com",
-  messagingSenderId: "401747450257",
-  appId: "1:401747450257:web:e8e0bb3eddd410f74e2230",
-  measurementId: "G-84BQQNM04C"
+    apiKey: "AIzaSyCxGNOFCTk9I-0PYMRuVrVjTwqtQl51GPw",
+    authDomain: "basicallydiscordapp.firebaseapp.com",
+    databaseURL: "https://basicallydiscordapp-default-rtdb.firebaseio.com",
+    projectId: "basicallydiscordapp",
+    storageBucket: "basicallydiscordapp.appspot.com",
+    messagingSenderId: "401747450257",
+    appId: "1:401747450257:web:e8e0bb3eddd410f74e2230",
+    measurementId: "G-84BQQNM04C"
 };
 
-// Initialize Firebase
+// Initialize Firebase app
 firebase.initializeApp(firebaseConfig);
+
+// Get a reference to the Realtime Database
 const db = firebase.database();
 
-// Wait for the DOM to load before accessing elements
-document.addEventListener('DOMContentLoaded', () => {
-    const usernameInput = document.getElementById('username');
-    const messageInput = document.getElementById('message');
-    const chatBox = document.getElementById('chat-box');
+// Reference to the messages collection in the database
+const messagesRef = db.ref('messages');
 
-    function sendMessage() {
-        const username = usernameInput.value || 'Anonymous';
-        const messageText = messageInput.value;
-
-        if (messageText.trim()) {
-            db.ref('messages').push({
-                username: username,
-                text: messageText
-            }).then(() => {
-                messageInput.value = ''; // Clear the message input after sending
-            }).catch(error => {
-                console.error("Error sending message: ", error);
-            });
-        }
-    }
-
-    // Set the click handler for the send button
-    document.querySelector('button').addEventListener('click', sendMessage);
-});
-
-
-// Load messages from Firebase
-db.ref('messages').on('child_added', (snapshot) => {
+// Listen for new messages added to the database
+messagesRef.on('child_added', (snapshot) => {
     const message = snapshot.val();
-    const messageElement = document.createElement('div');
-    messageElement.textContent = `${message.username}: ${message.text}`;
-    chatBox.appendChild(messageElement);
-    chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom
+    displayMessage(message.text);
 });
 
-// Send message to Firebase
-function sendMessage() {
-    const username = usernameInput.value || 'Anonymous';
-    const messageText = messageInput.value;
+// Function to send a new message to the database
+document.getElementById('form').addEventListener('submit', (e) => {
+    e.preventDefault();  // Prevent the form from refreshing the page
+    const input = document.getElementById('input');
+    const message = input.value.trim();
 
-    if (messageText.trim()) {
-        db.ref('messages').push({
-            username: username,
-            text: messageText
-        });
-        messageInput.value = '';
+    if (message) {
+        // Push the message to the database
+        messagesRef.push({ text: message });
+        input.value = '';  // Clear the input field
     }
+});
+
+// Function to display the message on the chat interface
+function displayMessage(message) {
+    const messagesList = document.getElementById('messages');
+    const newMessage = document.createElement('li');
+    newMessage.textContent = message;
+    messagesList.appendChild(newMessage);
+    messagesList.scrollTop = messagesList.scrollHeight;  // Scroll to the bottom
 }
